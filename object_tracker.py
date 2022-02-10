@@ -3,9 +3,11 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import time
 import tensorflow as tf
+import tensorflow.keras as keras
 physical_devices = tf.config.experimental.list_physical_devices('GPU')
 if len(physical_devices) > 0:
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
+    
 from absl import app, flags, logging
 from absl.flags import FLAGS
 import core.utils as utils
@@ -18,11 +20,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
+
 # deep sort imports
 from deep_sort import preprocessing, nn_matching
 from deep_sort.detection import Detection
 from deep_sort.tracker import Tracker
 from tools import generate_detections as gdet
+
 flags.DEFINE_string('framework', 'tf', '(tf, tflite, trt')
 flags.DEFINE_string('weights', './checkpoints/yolov4-416',
                     'path to weights file')
@@ -70,8 +74,7 @@ def main(_argv):
         print(output_details)
     # otherwise load standard tensorflow saved model
     else:
-        saved_model_loaded = tf.saved_model.load(FLAGS.weights, tags=[tag_constants.SERVING])
-        infer = saved_model_loaded.signatures['serving_default']
+        infer  = keras.models.load_model(FLAGS.weights)
 
     # begin video capture
     try:
@@ -122,10 +125,11 @@ def main(_argv):
                                                 input_shape=tf.constant([input_size, input_size]))
         else:
             batch_data = tf.constant(image_data)
-            pred_bbox = infer(batch_data)
-            for key, value in pred_bbox.items():
-                boxes = value[:, :, 0:4]
-                pred_conf = value[:, :, 4:]
+                pred_bbox = infer.predict(batch_data)
+            for value in pred_bbox:
+                temp_value = np.expand_dims(value, axis=0)
+                boxes = temp_value[:, :, 0:4]
+                pred_conf = temp_value[:, :, 4:]
 
         boxes, scores, classes, valid_detections = tf.image.combined_non_max_suppression(
             boxes=tf.reshape(boxes, (tf.shape(boxes)[0], -1, 1, 4)),
