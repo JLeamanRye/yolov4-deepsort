@@ -125,7 +125,7 @@ def main(_argv):
                                                 input_shape=tf.constant([input_size, input_size]))
         else:
             batch_data = tf.constant(image_data)
-                pred_bbox = infer.predict(batch_data)
+            pred_bbox = infer.predict(batch_data)
             for value in pred_bbox:
                 temp_value = np.expand_dims(value, axis=0)
                 boxes = temp_value[:, :, 0:4]
