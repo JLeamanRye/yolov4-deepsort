@@ -4,6 +4,7 @@ from absl.flags import FLAGS
 from core.yolov4 import YOLO, decode, filter_boxes
 import core.utils as utils
 from core.config import cfg
+import datetime, os
 
 flags.DEFINE_string('weights', './data/yolov4.weights', 'path to weights file')
 flags.DEFINE_string('output', './checkpoints/yolov4-416', 'path to output')
@@ -47,6 +48,10 @@ def save_tf():
     pred = tf.concat([boxes, pred_conf], axis=-1)
   model = tf.keras.Model(input_layer, pred)
   model.compile(optimizer="Adam", loss="mse", metrics=["mae"])
+  
+  logdir = os.path.join("logs", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+  tensorboard_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
+  
   utils.load_weights(model, FLAGS.weights, FLAGS.model, FLAGS.tiny)
   model.summary()
   model.save(FLAGS.output)
