@@ -4,6 +4,8 @@ from absl.flags import FLAGS
 from core.yolov4 import YOLO, decode, filter_boxes
 import core.utils as utils
 from core.config import cfg
+from keras.layers import LSTM
+import numpy as np
 import datetime, os
 
 flags.DEFINE_string('weights', './data/yolov4.weights', 'path to weights file')
@@ -47,6 +49,7 @@ def save_tf():
     boxes, pred_conf = filter_boxes(pred_bbox, pred_prob, score_threshold=FLAGS.score_thres, input_shape=tf.constant([FLAGS.input_size, FLAGS.input_size]))
     pred = tf.concat([boxes, pred_conf], axis=-1)
   model = tf.keras.Model(input_layer, pred)
+  model.add(LSTM(5, input_shape(FLAGS.input_size, FLAGS.input_size)))
   model.compile(optimizer="Adam", loss="mse", metrics=["mae"])
   
   logdir = os.path.join("logs", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
