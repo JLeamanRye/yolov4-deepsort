@@ -21,7 +21,7 @@ flags.DEFINE_string('model', 'yolov4', 'yolov3 or yolov4')
 def save_tf():
   STRIDES, ANCHORS, NUM_CLASS, XYSCALE = utils.load_config(FLAGS)
 
-  input_layer = tf.keras.layers.Input(5, 5, [FLAGS.input_size, FLAGS.input_size, 3])
+  input_layer = tf.keras.layers.Input([FLAGS.input_size, FLAGS.input_size, 3])
   feature_maps = YOLO(input_layer, NUM_CLASS, FLAGS.model, FLAGS.tiny)
   tdOut = td(feature_maps)(input_layer) # LSTM Time Distro
   lstmOut = tf.keras.layers.LSTM(50, activation='tanh')(tdOut)
@@ -51,8 +51,9 @@ def save_tf():
     pred = (pred_bbox, pred_prob)
   else:
     boxes, pred_conf = filter_boxes(pred_bbox, pred_prob, score_threshold=FLAGS.score_thres, input_shape=tf.constant([FLAGS.input_size, FLAGS.input_size]))
-    # pred = tf.concat([boxes, pred_conf], axis=-1)
-    pred = tf.keras.layers.Dense(5, activation='relu')(lstmOut)
+    predout = tf.concat([boxes, pred_conf], axis=-1)
+  predLSTM = tf.keras.layers.Dense(5, activation='relu')(lstmOut)
+  pred = tf.concat([predout,predLSTM], axis=-1)
   model = tf.keras.Model(input_layer, pred)
   
   
