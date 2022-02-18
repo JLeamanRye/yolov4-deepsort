@@ -1,14 +1,9 @@
-from concurrent.futures import ThreadPoolExecutor
 import tensorflow as tf
 from absl import app, flags, logging
 from absl.flags import FLAGS
 from core.yolov4 import YOLO, decode, filter_boxes
 import core.utils as utils
 from core.config import cfg
-from keras.layers import LSTM
-import numpy as np
-import datetime, os
-from keras.layers import TimeDistributed as td
 
 flags.DEFINE_string('weights', './data/yolov4.weights', 'path to weights file')
 flags.DEFINE_string('output', './checkpoints/yolov4-416', 'path to output')
@@ -20,11 +15,9 @@ flags.DEFINE_string('model', 'yolov4', 'yolov3 or yolov4')
 
 def save_tf():
   STRIDES, ANCHORS, NUM_CLASS, XYSCALE = utils.load_config(FLAGS)
-  input = tf.keras.layers.Input(shape=(100,1))
-  input_layer = tf.keras.layers.Input([FLAGS.input_size, FLAGS.input_size, 3])(input)
+
+  input_layer = tf.keras.layers.Input([FLAGS.input_size, FLAGS.input_size, 3])
   feature_maps = YOLO(input_layer, NUM_CLASS, FLAGS.model, FLAGS.tiny)
-  tdOut = td(feature_maps)(input_layer) # LSTM Time Distro
-  lstmOut = tf.keras.layers.LSTM(50, activation='tanh')(tdOut)
   bbox_tensors = []
   prob_tensors = []
   if FLAGS.tiny:
@@ -51,17 +44,8 @@ def save_tf():
     pred = (pred_bbox, pred_prob)
   else:
     boxes, pred_conf = filter_boxes(pred_bbox, pred_prob, score_threshold=FLAGS.score_thres, input_shape=tf.constant([FLAGS.input_size, FLAGS.input_size]))
-    predout = tf.concat([boxes, pred_conf], axis=-1)
-  predLSTM = tf.keras.layers.Dense(5, activation='relu')(lstmOut)
-  pred = tf.concat([predout,predLSTM], axis=-1)
+    pred = tf.concat([boxes, pred_conf], axis=-1)
   model = tf.keras.Model(input_layer, pred)
-  
-  
-  model.compile(optimizer="Adam", loss="mse", metrics=["mae"])
-  
-  logdir = os.path.join("logs", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
-  tensorboard_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
-  
   utils.load_weights(model, FLAGS.weights, FLAGS.model, FLAGS.tiny)
   model.summary()
   model.save(FLAGS.output)
