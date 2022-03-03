@@ -59,8 +59,11 @@ def save_tf():
  modelLSTM = tf.keras.Model(model.input,outs)
 
   utils.load_weights(model, FLAGS.weights, FLAGS.model, FLAGS.tiny)
-  model.summary()
-  model.save(FLAGS.output)
+  #model.summary()
+  #model.save(FLAGS.output)
+  
+  modelLSTM.summary()
+  modelLSTM.save(FLAGS.output)
   
   
 
