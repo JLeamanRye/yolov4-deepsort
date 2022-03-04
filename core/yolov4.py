@@ -73,13 +73,11 @@ def YOLOv3(input_layer, NUM_CLASS):
 
 def YOLOv4(input_layer, NUM_CLASS):
     route_1, route_2, conv = backbone.cspdarknet53(input_layer)
-    timesteps = 5
-    inputs = tf.keras.Input(shape=(timesteps, input_layer.shape[0] + num_classes))
-     # LSTM component of network built from function above
-    lstm = build_lstm(hidden_sizes=hidden_sizes)(inputs)
-
+    # LSTM component of network built from function above
+    lstm = tf.keras.layers.LSTM(10)
+    
     route = conv
-    conv = common.convolutional(conv, (1, 1, 512, 256))(lstm)
+    conv = common.convolutional(conv, (1, 1, 512, 256))
     conv = common.upsample(conv)
     route_2 = common.convolutional(route_2, (1, 1, 512, 256))
     conv = tf.concat([route_2, conv], axis=-1)
@@ -102,6 +100,8 @@ def YOLOv4(input_layer, NUM_CLASS):
     conv = common.convolutional(conv, (3, 3, 128, 256))
     conv = common.convolutional(conv, (1, 1, 256, 128))
 
+    test = tf.squeeze(conv, axis=0)
+    route_1 = lstm(test)
     route_1 = conv
     conv = common.convolutional(conv, (3, 3, 128, 256))
     conv_sbbox = common.convolutional(conv, (1, 1, 256, 3 * (NUM_CLASS + 5)), activate=False, bn=False)
@@ -127,8 +127,10 @@ def YOLOv4(input_layer, NUM_CLASS):
     conv = common.convolutional(conv, (1, 1, 1024, 512))
     conv = common.convolutional(conv, (3, 3, 512, 1024))
     conv = common.convolutional(conv, (1, 1, 1024, 512))
+	test = tf.squeeze(conv, axis=0)
+	test2 = lstm(test)
 
-    conv = common.convolutional(conv, (3, 3, 512, 1024))
+    conv = common.convolutional(test2, (3, 3, 512, 1024))
     conv_lbbox = common.convolutional(conv, (1, 1, 1024, 3 * (NUM_CLASS + 5)), activate=False, bn=False)
 
     return [conv_sbbox, conv_mbbox, conv_lbbox]
