@@ -7,6 +7,9 @@ import core.utils as utils
 import core.common as common
 import core.backbone as backbone
 from core.config import cfg
+from tensorflow.keras import Layers
+
+
 
 # NUM_CLASS       = len(utils.read_class_names(cfg.YOLO.CLASSES))
 # STRIDES         = np.array(cfg.YOLO.STRIDES)
@@ -70,9 +73,13 @@ def YOLOv3(input_layer, NUM_CLASS):
 
 def YOLOv4(input_layer, NUM_CLASS):
     route_1, route_2, conv = backbone.cspdarknet53(input_layer)
+    timesteps = 5
+    inputs = tf.keras.Input(shape=(timesteps, input_layer.shape[0] + num_classes))
+     # LSTM component of network built from function above
+    lstm = build_lstm(hidden_sizes=hidden_sizes)(inputs)
 
     route = conv
-    conv = common.convolutional(conv, (1, 1, 512, 256))
+    conv = common.convolutional(conv, (1, 1, 512, 256))(lstm)
     conv = common.upsample(conv)
     route_2 = common.convolutional(route_2, (1, 1, 512, 256))
     conv = tf.concat([route_2, conv], axis=-1)
@@ -362,6 +369,30 @@ def compute_loss(pred, conv, label, bboxes, STRIDES, NUM_CLASS, IOU_LOSS_THRESH,
     return giou_loss, conf_loss, prob_loss
 
 
+
+
+def build_lstm(hidden_sizes, reuse=False):
+    """
+    Builds the LSTM network
+    Args:
+        hidden_sizes:
+        reuse:
+    Returns:
+        tf.keras.Layers.RNN instance (stacked LSTM cells)
+    """
+    with tf.variable_scope("LSTM") as scope:
+        if reuse:
+            tf.get_variable_scope().reuse_variables()
+
+        cells = []
+        for i, hidden_size in enumerate(hidden_sizes):
+            cell = Layers.LSTMCell(units=hidden_size, unit_forget_bias=1, name="LSTM_Layer_{}".format(i))
+            cells.append(cell)
+        outputs = Layers.RNN(cells, name="RNN_net")  # RNN cell composed sequentially of multiple simple cells.
+
+        tf.get_variable_scope().reuse_variables()
+
+        return outputs
 
 
 
