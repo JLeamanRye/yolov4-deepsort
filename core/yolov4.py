@@ -99,9 +99,7 @@ def YOLOv4(input_layer, NUM_CLASS):
     conv = common.convolutional(conv, (1, 1, 256, 128))
     conv = common.convolutional(conv, (3, 3, 128, 256))
     conv = common.convolutional(conv, (1, 1, 256, 128))
-
-    test = tf.squeeze(conv, axis=0)
-    route_1 = lstm(test)
+	
     route_1 = conv
     conv = common.convolutional(conv, (3, 3, 128, 256))
     conv_sbbox = common.convolutional(conv, (1, 1, 256, 3 * (NUM_CLASS + 5)), activate=False, bn=False)
@@ -127,10 +125,9 @@ def YOLOv4(input_layer, NUM_CLASS):
     conv = common.convolutional(conv, (1, 1, 1024, 512))
     conv = common.convolutional(conv, (3, 3, 512, 1024))
     conv = common.convolutional(conv, (1, 1, 1024, 512))
-	test = tf.squeeze(conv, axis=0)
-	test2 = lstm(test)
 
-    conv = common.convolutional(test2, (3, 3, 512, 1024))
+
+    conv = common.convolutional(conv, (3, 3, 512, 1024))
     conv_lbbox = common.convolutional(conv, (1, 1, 1024, 3 * (NUM_CLASS + 5)), activate=False, bn=False)
 
     return [conv_sbbox, conv_mbbox, conv_lbbox]
