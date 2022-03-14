@@ -50,7 +50,7 @@ def save_tf():
     print("*********************************************************")
     
   model = tf.keras.Model(input_layer, pred)
-  utils.load_weights(model, FLAGS.weights, FLAGS.model, FLAGS.tiny)
+  # utils.load_weights(model, FLAGS.weights, FLAGS.model, FLAGS.tiny)
   model.summary()
   model.save(FLAGS.output)
 
