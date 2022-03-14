@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # coding=utf-8
 
+from re import I
 import tensorflow as tf
 # import tensorflow_addons as tfa
 class BatchNormalization(tf.keras.layers.BatchNormalization):
@@ -17,18 +18,29 @@ class BatchNormalization(tf.keras.layers.BatchNormalization):
         return super().call(x, training)
 
 def convolutional(input_layer, filters_shape, downsample=False, activate=True, bn=True, activate_type='leaky'):
+    timestep=27
+    #print("******************")
+    #print(input_layer.shape)
+    input_layer = tf.expand_dims(input_layer, axis =0)
+    #print(input_layer.shape)
+    #input_layer = input_layer[timestep, :, :, :, :]
+    #print("******************")
+    #print(input_layer.shape)
+    #print("******************")
     if downsample:
+        input_layer = tf.squeeze(input_layer, axis = 0)
         input_layer = tf.keras.layers.ZeroPadding2D(((1, 0), (1, 0)))(input_layer)
+        input_layer = tf.expand_dims(input_layer, axis =0)
         padding = 'valid'
         strides = 2
     else:
         strides = 1
         padding = 'same'
 
-    conv = tf.keras.layers.Conv2D(filters=filters_shape[-1], kernel_size = filters_shape[0], strides=strides, padding=padding,
-                                  use_bias=not bn, kernel_regularizer=tf.keras.regularizers.l2(0.0005),
+    conv = tf.keras.layers.ConvLSTM2D(filters=filters_shape[-1], kernel_size = filters_shape[0], strides=strides, padding=padding, activation = "tanh",
+                                  recurrent_activation = "hard_sigmoid", use_bias=not bn, kernel_regularizer=tf.keras.regularizers.l2(0.0005),
                                   kernel_initializer=tf.random_normal_initializer(stddev=0.01),
-                                  bias_initializer=tf.constant_initializer(0.))(input_layer)
+                                  bias_initializer=tf.constant_initializer(0.), return_sequences = False, return_state=False, go_backwards=False, stateful=False, dropout=0.0, recurrent_dropout=0.0,)(input_layer)
 
     if bn: conv = BatchNormalization()(conv)
     if activate == True:
