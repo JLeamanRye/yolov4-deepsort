@@ -7,7 +7,7 @@ import core.utils as utils
 import core.common as common
 import core.backbone as backbone
 from core.config import cfg
-from tensorflow.keras import Layers
+from tensorflow.keras import layers
 
 
 
