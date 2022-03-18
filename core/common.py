@@ -37,7 +37,7 @@ def convolutional(input_layer, filters_shape, downsample=False, activate=True, b
             conv = tf.nn.leaky_relu(conv, alpha=0.1)
         elif activate_type == "mish":
             conv = mish(conv)
-    return 
+    return conv
 
 def convolutionalLSTM(input_layer, filters_shape, downsample=False, activate=True, bn=True, activate_type='leaky'):
     timestep=27
