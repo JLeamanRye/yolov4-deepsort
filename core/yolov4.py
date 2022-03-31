@@ -125,12 +125,13 @@ def YOLOv4(input_layer, NUM_CLASS):
     conv = common.convolutional(conv, (1, 1, 1024, 512))
     conv = common.convolutional(conv, (3, 3, 512, 1024))
     conv = common.convolutional(conv, (1, 1, 1024, 512))
+    conv = common.convolutionalLSTM(conv, (3, 3, 512, 1024)) # Add one LSTM layer at the end
     conv = common.convolutional(conv, (3, 3, 512, 1024))
     conv = common.convolutional(conv, (1, 1, 1024, 512))
 
 
     conv = common.convolutional(conv, (3, 3, 512, 1024))
-    conv = common.convolutionalLSTM(conv, (3, 3, 512, 1024)) # Add one LSTM layer at the end
+    
     conv_lbbox = common.convolutional(conv, (1, 1, 1024, 3 * (NUM_CLASS + 5)), activate=False, bn=False)
 
     return [conv_sbbox, conv_mbbox, conv_lbbox]
