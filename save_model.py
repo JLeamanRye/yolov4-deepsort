@@ -1,4 +1,6 @@
 import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import metrics
 from absl import app, flags, logging
 from absl.flags import FLAGS
 from core.yolov4 import YOLO, decode, filter_boxes
@@ -50,8 +52,21 @@ def save_tf():
     print("*********************************************************")
     
   model = tf.keras.Model(input_layer, pred)
-  # utils.load_weights(model, FLAGS.weights, FLAGS.model, FLAGS.tiny)
+  utils.load_weights(model, FLAGS.weights, FLAGS.model, FLAGS.tiny)
   model.summary()
+  
+  model.compile(
+    optimizer='adam',
+    loss='mean_squared_error',
+    metrics=[
+        metrics.MeanSquaredError(),
+        metrics.AUC(),
+    ]
+)
+  print("*********************************************************")
+  print(metrics.MeanSquaredError())
+  print(metrics.AUC())
+  print("*********************************************************")
   model.save(FLAGS.output)
 
 def main(_argv):
