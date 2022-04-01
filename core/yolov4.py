@@ -283,31 +283,3 @@ def compute_loss(pred, conv, label, bboxes, STRIDES, NUM_CLASS, IOU_LOSS_THRESH,
 
     return giou_loss, conf_loss, prob_loss
 
-
-
-
-def build_lstm(hidden_sizes, reuse=False):
-    """
-    Builds the LSTM network
-    Args:
-        hidden_sizes:
-        reuse:
-    Returns:
-        tf.keras.Layers.RNN instance (stacked LSTM cells)
-    """
-    with tf.variable_scope("LSTM") as scope:
-        if reuse:
-            tf.get_variable_scope().reuse_variables()
-
-        cells = []
-        for i, hidden_size in enumerate(hidden_sizes):
-            cell = Layers.LSTMCell(units=hidden_size, unit_forget_bias=1, name="LSTM_Layer_{}".format(i))
-            cells.append(cell)
-        outputs = Layers.RNN(cells, name="RNN_net")  # RNN cell composed sequentially of multiple simple cells.
-
-        tf.get_variable_scope().reuse_variables()
-
-        return outputs
-
-
-
