@@ -37,9 +37,11 @@ def load_weights(model, weights_file, model_name='yolov4', is_tiny=False):
     major, minor, revision, seen, _ = np.fromfile(wf, dtype=np.int32, count=5)
 
     j = 0
+    k = 0
     for i in range(layer_size):
         conv_layer_name = 'conv2d_%d' %i if i > 0 else 'conv2d'
         bn_layer_name = 'batch_normalization_%d' %j if j > 0 else 'batch_normalization'
+        conv_lstm_layer_name = 'conv_lstm2d_%d' %k if k > 0 else 'conv_lstm2d' 
 
         conv_layer = model.get_layer(conv_layer_name)
         filters = conv_layer.filters
@@ -47,6 +49,9 @@ def load_weights(model, weights_file, model_name='yolov4', is_tiny=False):
         in_dim = conv_layer.input_shape[-1]
 
         if i not in output_pos:
+            if(j == 104):
+              j += 1
+              break
             # darknet weights: [beta, gamma, mean, variance]
             bn_weights = np.fromfile(wf, dtype=np.float32, count=4 * filters)
             # tf weights: [gamma, beta, mean, variance]
