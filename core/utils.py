@@ -48,6 +48,9 @@ def load_weights(model, weights_file, model_name='yolov4', is_tiny=False):
         in_dim = conv_layer.input_shape[-1]
 
         if i not in output_pos:
+            if j==104:
+                j+=1
+                break
             # darknet weights: [beta, gamma, mean, variance]
             bn_weights = np.fromfile(wf, dtype=np.float32, count=4 * filters)
             # tf weights: [gamma, beta, mean, variance]
